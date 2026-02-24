@@ -90,7 +90,7 @@
     }
     .week-label {
       font-size: 18px;
-      font-weight: 400;
+      font-weight: 600;
       color: #e7e9f3;
     }
     .nav-btn {
@@ -797,11 +797,21 @@ function weekKey(mon) {
 }
 
 function weekRangeLabel(mon) {
+  // Compare this week's Monday against today's Monday to get the offset in weeks
+  const todayMonday = getMonday(new Date());
+  const diffMs = mon.getTime() - todayMonday.getTime();
+  const diffWeeks = Math.round(diffMs / (7 * 24 * 60 * 60 * 1000));
+
+  if (diffWeeks === 0)  return 'Current week';
+  if (diffWeeks === 1)  return 'Next week';
+  if (diffWeeks === -1) return 'Last week';
+
+  // For all other weeks, show the date range
   const ds = weekDates(mon);
   const a = ds[0], b = ds[4];
-  if (a.getMonth() === b.getMonth())
-    return `${a.getDate()} – ${b.getDate()} de ${PT_MONTHS[a.getMonth()]}`;
-  return `${fmt(a)} – ${fmt(b)}`;
+  return (a.getMonth() === b.getMonth())
+    ? `${a.getDate()} – ${b.getDate()} de ${PT_MONTHS[a.getMonth()]}`
+    : `${fmt(a)} – ${fmt(b)}`;
 }
 
 function isToday(d) {

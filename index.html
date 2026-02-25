@@ -753,6 +753,41 @@
       #blob1, #blob2 { filter: blur(100px); }
     }
 
+    /* ─── Performance mode ─── */
+    /* Activated automatically when FPS drops below 45 (see JS below),
+       or immediately if macOS "Reduce Motion" is enabled in System Settings.
+       Blobs still FLOAT (transform-only, runs on the GPU compositor = nearly free).
+       What stops: path morphing + border-radius morphing (both force the browser to
+       re-rasterize and re-blur the shape on every single frame) + grain animation
+       (fires 2× per second, forcing a full layer repaint) + backdrop-filter
+       (requires a compositing pass every frame the card is on screen). */
+
+    /* Stop SVG path morphing on blob1 and blob2 — their float/translate keeps going */
+    body.perf-mode #blob1 path,
+    body.perf-mode #blob2 path { animation: none; }
+
+    /* blob3 and blob4 each have TWO animations: float + morph.
+       Override to keep only the float animation, dropping the border-radius morph. */
+    body.perf-mode #blob3 { animation: blobFloat3 22s ease-in-out infinite; }
+    body.perf-mode #blob4 { animation: blobFloat4 19s ease-in-out infinite; }
+
+    /* Grain fires 2× per second — removing it alone frees a lot of repaint budget */
+    body.perf-mode #bg-grain { display: none; }
+
+    /* backdrop-filter forces a compositing pass on every frame — not worth it in perf mode */
+    body.perf-mode .card    { backdrop-filter: none; -webkit-backdrop-filter: none; }
+    body.perf-mode .overlay { backdrop-filter: none; -webkit-backdrop-filter: none; }
+
+    /* Same reduced set for the OS "Reduce Motion" preference — takes effect before JS runs */
+    @media (prefers-reduced-motion: reduce) {
+      #blob1 path, #blob2 path { animation: none; }
+      #blob3 { animation: blobFloat3 22s ease-in-out infinite; }
+      #blob4 { animation: blobFloat4 19s ease-in-out infinite; }
+      #bg-grain                { display: none; }
+      .card                    { backdrop-filter: none; -webkit-backdrop-filter: none; }
+      .overlay                 { backdrop-filter: none; -webkit-backdrop-filter: none; }
+    }
+
     /* ─── Print ─── */
     @media print {
       body { background: white; padding: 12px; }
@@ -1620,6 +1655,53 @@ function seedSamples() {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // INIT
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// ─── Auto performance mode ────────────────────────────────────────────────────
+// Measures real frames-per-second using requestAnimationFrame.
+// If FPS stays below 45 for 2 consecutive seconds, adds .perf-mode to <body>
+// — stopping all background animations so the GPU is free for other apps
+// (camera software, video calls, screen recorders, etc.).
+// Once activated, stays on for the rest of the session (no yo-yo effect).
+(function () {
+
+  // 1. Respect macOS/Windows "Reduce Motion" system preference immediately.
+  //    No need to measure anything — just activate right away.
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.body.classList.add('perf-mode');
+    return; // skip FPS monitoring
+  }
+
+  const FPS_LOW    = 45; // below this = GPU is struggling
+  const STRIKES    = 2;  // how many consecutive low-FPS seconds before activating
+
+  let frameCount = 0;
+  let lastCheck  = performance.now();
+  let strikes    = 0;
+
+  (function tick(now) {
+    frameCount++;
+
+    // Check once per second
+    if (now - lastCheck >= 1000) {
+      const fps  = frameCount;
+      frameCount = 0;
+      lastCheck  = now;
+
+      if (fps < FPS_LOW) {
+        strikes++;
+        if (strikes >= STRIKES) {
+          document.body.classList.add('perf-mode');
+          return; // stop the loop — perf mode stays on for this session
+        }
+      } else {
+        strikes = 0; // FPS recovered before threshold hit — reset the counter
+      }
+    }
+
+    requestAnimationFrame(tick);
+  }(performance.now()));
+
+}());
 
 loadTasks();
 seedSamples();

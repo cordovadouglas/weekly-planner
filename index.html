@@ -701,12 +701,10 @@
       .task-block { padding: 6px 4px; }
       .task-name  { font-size: 12px; }
 
-      /* Larger touch hit zones on resize handles (was 10px, now 14px) */
-      .resize-l, .resize-r { width:  14px; }
-      .resize-b            { height: 14px; }
-
-      /* Bigger delete button — easier to tap with a finger */
-      .del-btn { width: 22px; height: 22px; }
+      /* Hide all drag/resize indicators — touch devices use tap-to-edit instead */
+      .task-block { cursor: default; }
+      .del-btn,
+      .resize-l, .resize-r, .resize-b { display: none !important; }
 
       /* Modal: fill the overlay width and tighten interior spacing */
       .modal {

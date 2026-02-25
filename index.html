@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Weekly Planner</title>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@200;400;500;600&display=swap" rel="stylesheet" />
   <style>
@@ -15,7 +15,7 @@
     }
 
     /* ─── Reset ─── */
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; touch-action: manipulation; }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Instrument Sans', system-ui, sans-serif;
@@ -140,17 +140,8 @@
       justify-content: center;
       transition: background .14s;
     }
-    @media (hover: hover) {
-      .nav-btn:hover { background: rgba(255,255,255,0.15); }
-    }
+    .nav-btn:hover  { background: rgba(255,255,255,0.15); }
     .nav-btn:active { background: rgba(255,255,255,0.22); transform: scale(.9); }
-
-    /* Tap echo — added by JS on touchend, fades the flash out after finger lifts */
-    @keyframes tapFlash {
-      from { background: rgba(255,255,255,0.22); }
-      to   { background: transparent; }
-    }
-    .nav-btn.was-tapped { animation: tapFlash 0.35s ease-out forwards; }
 
     /* ─── Day headers ─── */
     .days-row {
@@ -520,9 +511,7 @@
       background: radial-gradient(circle, rgba(28, 55, 200, 0.48) 0%, transparent 65%);
       filter: blur(90px);
       left: -12vw; top: 42vh;
-      /* Two animations: float (position) + morph (shape). 18s is prime-ish vs 19s float. */
-      animation: blobFloat4 19s ease-in-out infinite,
-                 blobMorph4 18s ease-in-out infinite alternate;
+      animation: blobFloat4 19s ease-in-out infinite;
     }
 
     /*
@@ -537,9 +526,7 @@
       background: radial-gradient(circle, rgba(2, 1, 18, 0.96) 0%, rgba(2, 1, 18, 0.72) 40%, rgba(2, 1, 18, 0.25) 62%, transparent 75%);
       filter: blur(80px);
       left: -15vw; top: -15vh;
-      /* Two animations: float (position) + morph (shape). 14s is prime-ish vs 22s float. */
-      animation: blobFloat3 22s ease-in-out infinite,
-                 blobMorph3 14s ease-in-out infinite alternate;
+      animation: blobFloat3 22s ease-in-out infinite;
     }
 
     /*
@@ -576,28 +563,6 @@
       100% { transform: translate(  0vw,   0vh); }
     }
 
-    /*
-      border-radius morphing for blob3 and blob4 (the pure CSS circles).
-      CSS border-radius accepts 8 values: the horizontal and vertical radii for
-      each corner independently. By cycling through asymmetric combinations,
-      the circle stretches into a lopsided ellipse and back — like a liquid blob
-      being gently squeezed from different sides.
-    */
-    @keyframes blobMorph4 {
-      0%   { border-radius: 50%; }
-      25%  { border-radius: 62% 38% 50% 50% / 45% 45% 55% 55%; }
-      50%  { border-radius: 42% 58% 65% 35% / 55% 40% 60% 45%; }
-      75%  { border-radius: 55% 45% 38% 62% / 60% 55% 45% 40%; }
-      100% { border-radius: 50%; }
-    }
-
-    @keyframes blobMorph3 {
-      0%   { border-radius: 50%; }
-      33%  { border-radius: 58% 42% 44% 56% / 40% 60% 40% 60%; }
-      66%  { border-radius: 44% 56% 60% 40% / 60% 40% 55% 45%; }
-      100% { border-radius: 50%; }
-    }
-
     /* Indigo blob: slow, gentle drift — reinforces the central dark void */
     @keyframes blobFloat3 {
       0%   { transform: translate(  0vw,   0vh); }
@@ -605,53 +570,6 @@
       65%  { transform: translate( -6vw, -30vh); }
       85%  { transform: translate(  8vw,  14vh); }
       100% { transform: translate(  0vw,   0vh); }
-    }
-
-    /*
-      ─── LAVA LAMP SHAPE MORPHING ───────────────────────────────────────────
-      blob1 and blob2 are SVG <path> elements — we animate the `d` attribute
-      directly, morphing between 3 versions of the same shape (same command
-      count: M + 5 cubic beziers + Z). Anchor and control points shift between
-      keyframes so the blob stretches, squishes, and bulges like lava.
-      `alternate` means it reverses smoothly instead of jumping back to frame 0.
-      Durations are intentionally different from the float animations (11s vs
-      13s, 15s vs 17s) so the two cycles never lock into sync.
-    */
-
-    /* Blue blob — 11s morph cycle */
-    #blob1 path {
-      animation: blobMorph1 11s ease-in-out infinite alternate;
-    }
-    @keyframes blobMorph1 {
-      0% {
-        d: path('M834.563 1815.83C1592.41 1631.45 1644.17 767.955 1765.47 300C1932.98 686.47 2268 1466.4 2268 1494.33C2268 1529.25 1927.2 2444.21 1898.32 2458.18C1875.22 2469.35 1029.96 2500.09 610.215 2514.06C242.459 2397.65 76.7158 2000.22 834.563 1815.83Z');
-      }
-      50% {
-        /* Stretched taller — top spike pulled higher, sides tucked in slightly */
-        d: path('M800 1850C1560 1660 1600 700 1730 160C1900 610 2300 1420 2300 1460C2300 1500 1890 2480 1860 2500C1840 2500 1000 2540 580 2560C220 2430 60 2020 800 1850Z');
-      }
-      100% {
-        /* Squished shorter — wider belly, flatter top */
-        d: path('M870 1780C1620 1600 1680 840 1810 420C1970 740 2230 1480 2230 1520C2230 1560 1960 2430 1930 2420C1900 2440 1060 2480 640 2480C260 2370 100 1980 870 1780Z');
-      }
-    }
-
-    /* Teal blob — 15s morph cycle */
-    #blob2 path {
-      animation: blobMorph2 15s ease-in-out infinite alternate;
-    }
-    @keyframes blobMorph2 {
-      0% {
-        d: path('M1554.91 1513.19C2137.69 1867.31 2291.47 851.946 2295.52 300C2471.57 516.771 2867.37 1140.49 3042.21 1901.19C3260.75 2852.07 1979.85 2551.5 984.268 2431.28C187.803 2335.1 247.7 970.351 377.207 300C526.949 556.846 972.127 1159.07 1554.91 1513.19Z');
-      }
-      50% {
-        /* Spread wider — corners pushed further out, more open shape */
-        d: path('M1520 1480C2100 1840 2250 800 2260 200C2440 460 2920 1100 3120 1920C3320 2880 1960 2570 940 2490C160 2350 220 940 340 220C510 540 960 1140 1520 1480Z');
-      }
-      100% {
-        /* Pulled inward — more compact and rounded */
-        d: path('M1590 1550C2180 1900 2330 900 2330 390C2510 570 2820 1180 2970 1880C3190 2820 2000 2530 1030 2370C210 2310 270 1000 420 380C540 570 990 1180 1590 1550Z');
-      }
     }
 
     /* Grain overlay — PNG texture tiled at 8% opacity */
@@ -710,30 +628,23 @@
       .task-block { padding: 6px 4px; }
       .task-name  { font-size: 12px; }
 
-      /* Hide all drag/resize indicators — touch devices use tap-to-edit instead */
-      .task-block { cursor: default; }
-      .del-btn,
-      .resize-l, .resize-r, .resize-b { display: none !important; }
+      /* Larger touch hit zones on resize handles (was 10px, now 14px) */
+      .resize-l, .resize-r { width:  14px; }
+      .resize-b            { height: 14px; }
 
-      /* Modal: fill the overlay width and tighten interior spacing */
+      /* Bigger delete button — easier to tap with a finger */
+      .del-btn { width: 22px; height: 22px; }
+
+      /* Modal: fill the overlay's width (overlay already has 16px padding on each side)
+         and reduce interior padding to reclaim space for form fields */
       .modal {
         max-width: 100%;
         padding: 16px;
       }
 
-      /* Reduce the gap between every form field (was 16px) */
-      .field { margin-bottom: 10px; }
-
-      /* Reduce the space below the modal title (was 20px) */
-      .modal-header { margin-bottom: 12px; }
-
-      /* Smaller input/select padding — saves ~4px per field */
-      .field input,
-      .field select { padding: 8px 10px; }
-
-      /* Keep two columns for the day/row selects — they fit fine at 2×~140px
-         and this saves two full field-heights compared to stacking them */
-      .two-col { grid-template-columns: 1fr 1fr; gap: 8px; }
+      /* Stack the two-column form fields vertically.
+         "Start day / End day" and "Row / Height" become 4 full-width rows. */
+      .two-col { grid-template-columns: 1fr; }
 
       /* Slightly larger color swatches for easier tapping */
       .swatch { width: 38px; height: 38px; }
@@ -743,49 +654,6 @@
 
       /* Remove the blur behind the modal — it's expensive on mobile GPUs */
       .overlay { backdrop-filter: none; -webkit-backdrop-filter: none; }
-
-      /* The SVG blobs have an internal feGaussianBlur (stdDeviation 150 in SVG units).
-         On desktop that equals ~80px of actual blur, but on mobile the SVG shrinks so
-         the same value only produces ~20px — the path edges become sharp and visible.
-         Adding a CSS-level blur here works in real pixels regardless of SVG scale.
-         Rule of thumb: blur needs to be ~25% of the blob's width to fully hide the edge.
-         blob2 is ~490px wide on mobile → needs ~120px total → SVG gives ~22px → CSS adds 100px. */
-      #blob1, #blob2 { filter: blur(100px); }
-    }
-
-    /* ─── Performance mode ─── */
-    /* Activated automatically when FPS drops below 45 (see JS below),
-       or immediately if macOS "Reduce Motion" is enabled in System Settings.
-       Blobs still FLOAT (transform-only, runs on the GPU compositor = nearly free).
-       What stops: path morphing + border-radius morphing (both force the browser to
-       re-rasterize and re-blur the shape on every single frame) + grain animation
-       (fires 2× per second, forcing a full layer repaint) + backdrop-filter
-       (requires a compositing pass every frame the card is on screen). */
-
-    /* Stop SVG path morphing on blob1 and blob2 — their float/translate keeps going */
-    body.perf-mode #blob1 path,
-    body.perf-mode #blob2 path { animation: none; }
-
-    /* blob3 and blob4 each have TWO animations: float + morph.
-       Override to keep only the float animation, dropping the border-radius morph. */
-    body.perf-mode #blob3 { animation: blobFloat3 22s ease-in-out infinite; }
-    body.perf-mode #blob4 { animation: blobFloat4 19s ease-in-out infinite; }
-
-    /* Grain fires 2× per second — removing it alone frees a lot of repaint budget */
-    body.perf-mode #bg-grain { display: none; }
-
-    /* backdrop-filter forces a compositing pass on every frame — not worth it in perf mode */
-    body.perf-mode .card    { backdrop-filter: none; -webkit-backdrop-filter: none; }
-    body.perf-mode .overlay { backdrop-filter: none; -webkit-backdrop-filter: none; }
-
-    /* Same reduced set for the OS "Reduce Motion" preference — takes effect before JS runs */
-    @media (prefers-reduced-motion: reduce) {
-      #blob1 path, #blob2 path { animation: none; }
-      #blob3 { animation: blobFloat3 22s ease-in-out infinite; }
-      #blob4 { animation: blobFloat4 19s ease-in-out infinite; }
-      #bg-grain                { display: none; }
-      .card                    { backdrop-filter: none; -webkit-backdrop-filter: none; }
-      .overlay                 { backdrop-filter: none; -webkit-backdrop-filter: none; }
     }
 
     /* ─── Print ─── */
@@ -874,11 +742,11 @@
         <button class="nav-btn" id="btnPrev" title="Previous week">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
-        <button class="return-btn" id="returnBtnLeft" style="display:none" onclick="goToCurrent()">Go to current</button>
+        <button class="return-btn" id="returnBtnLeft" style="display:none" onclick="goToCurrent()">Return to current</button>
       </div>
       <span class="week-label" id="weekLabel"></span>
       <div class="nav-side">
-        <button class="return-btn" id="returnBtnRight" style="display:none" onclick="goToCurrent()">Go to current</button>
+        <button class="return-btn" id="returnBtnRight" style="display:none" onclick="goToCurrent()">Return to current</button>
         <button class="nav-btn" id="btnNext" title="Next week">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
@@ -1108,7 +976,7 @@ function render() {
 function renderWeekLabel() {
   document.getElementById('weekLabel').textContent = weekRangeLabel(monday);
 
-  // Show "Go to current" only when more than 1 week away from today
+  // Show "Return to current" only when more than 1 week away from today
   const diffWeeks = Math.round((monday - getMonday(new Date())) / (7 * 24 * 60 * 60 * 1000));
   document.getElementById('returnBtnLeft').style.display  = diffWeeks >  1 ? 'inline-block' : 'none';
   document.getElementById('returnBtnRight').style.display = diffWeeks < -1 ? 'inline-block' : 'none';
@@ -1173,12 +1041,11 @@ function renderGrid() {
     html += `
       <div class="task-block${extraClass}"
            style="background:${t.color}; grid-column:${c0+1}/span ${c1-c0+1}; grid-row:${t.r0+1}/span ${rs};"
-           onmousedown="startDrag(event,'${t.id}')"
-           onclick="if(window.matchMedia('(pointer:coarse)').matches)openEdit('${t.id}')">
+           onmousedown="startDrag(event,'${t.id}')">
         <span class="task-name">${esc(t.name)}</span>
         <button class="del-btn" title="Delete"
                 onmousedown="event.stopPropagation()"
-                onclick="event.stopPropagation();doDelete('${t.id}')">×</button>
+                onclick="doDelete('${t.id}')">×</button>
         <div class="resize-l" onmousedown="startResize(event,'${t.id}','left')"></div>
         <div class="resize-r" onmousedown="startResize(event,'${t.id}','right')"></div>
         <div class="resize-b" onmousedown="startResize(event,'${t.id}','bottom')"></div>
@@ -1379,14 +1246,6 @@ document.getElementById('btnPrev').addEventListener('click', () => {
 document.getElementById('btnNext').addEventListener('click', () => {
   monday.setDate(monday.getDate() + 7);
   render();
-});
-
-// Tap echo for mobile: on touchend, play a brief fade-out flash on the button
-['btnPrev', 'btnNext'].forEach(id => {
-  document.getElementById(id).addEventListener('touchend', function() {
-    this.classList.add('was-tapped');
-    this.addEventListener('animationend', () => this.classList.remove('was-tapped'), { once: true });
-  }, { passive: true });
 });
 
 document.getElementById('btnAddTask').addEventListener('click', () => {
@@ -1655,53 +1514,6 @@ function seedSamples() {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // INIT
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-// ─── Auto performance mode ────────────────────────────────────────────────────
-// Measures real frames-per-second using requestAnimationFrame.
-// If FPS stays below 45 for 2 consecutive seconds, adds .perf-mode to <body>
-// — stopping all background animations so the GPU is free for other apps
-// (camera software, video calls, screen recorders, etc.).
-// Once activated, stays on for the rest of the session (no yo-yo effect).
-(function () {
-
-  // 1. Respect macOS/Windows "Reduce Motion" system preference immediately.
-  //    No need to measure anything — just activate right away.
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    document.body.classList.add('perf-mode');
-    return; // skip FPS monitoring
-  }
-
-  const FPS_LOW    = 45; // below this = GPU is struggling
-  const STRIKES    = 2;  // how many consecutive low-FPS seconds before activating
-
-  let frameCount = 0;
-  let lastCheck  = performance.now();
-  let strikes    = 0;
-
-  (function tick(now) {
-    frameCount++;
-
-    // Check once per second
-    if (now - lastCheck >= 1000) {
-      const fps  = frameCount;
-      frameCount = 0;
-      lastCheck  = now;
-
-      if (fps < FPS_LOW) {
-        strikes++;
-        if (strikes >= STRIKES) {
-          document.body.classList.add('perf-mode');
-          return; // stop the loop — perf mode stays on for this session
-        }
-      } else {
-        strikes = 0; // FPS recovered before threshold hit — reset the counter
-      }
-    }
-
-    requestAnimationFrame(tick);
-  }(performance.now()));
-
-}());
 
 loadTasks();
 seedSamples();

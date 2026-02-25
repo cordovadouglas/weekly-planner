@@ -140,7 +140,9 @@
       justify-content: center;
       transition: background .14s;
     }
-    .nav-btn:hover  { background: rgba(255,255,255,0.15); }
+    @media (hover: hover) {
+      .nav-btn:hover { background: rgba(255,255,255,0.15); }
+    }
     .nav-btn:active { background: rgba(255,255,255,0.22); transform: scale(.9); }
 
     /* ─── Day headers ─── */

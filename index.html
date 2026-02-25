@@ -88,20 +88,48 @@
       justify-content: space-between;
       padding: 0 2px;
     }
+    /* Wrapper for chevron + optional return button on each side.
+       flex: 1 makes both sides equal width, keeping the label truly centered. */
+    .nav-side {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+    /* Right side pushes its content to the right edge */
+    .nav-side:last-child { justify-content: flex-end; }
+    .return-btn {
+      background: rgba(40, 40, 52, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.13);
+      border-radius: 12px;
+      padding: 4px 8px;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      line-height: 12px;
+      white-space: nowrap;
+      transition: opacity .15s;
+    }
+    .return-btn:hover  { opacity: .75; }
+    .return-btn:active { transform: scale(.96); }
     .week-label {
       font-size: 18px;
-      font-weight: 600;
-      color: #e7e9f3;
+      font-weight: 400;
+      color: white;
     }
     .nav-btn {
       background: none;
       border: none;
       cursor: pointer;
-      padding: 5px 10px;
+      padding: 5px 8px;
       border-radius: 8px;
-      font-size: 20px;
       color: #b5b9d4;
-      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: background .14s;
     }
     .nav-btn:hover  { background: rgba(255,255,255,0.15); }
@@ -123,7 +151,7 @@
     .day-header.today { background: rgba(255,255,255,0.15); }
     .day-date {
       font-size: 20px;
-      font-weight: 600;
+      font-weight: 500;
       color: #e7e9f3;
     }
     .day-name {
@@ -155,7 +183,7 @@
     .task-block:hover { filter: brightness(.93); }
 
     .task-name {
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 500;
       color: #282834;
       text-align: center;
@@ -640,9 +668,19 @@
 
     <!-- Week navigation -->
     <div class="week-nav">
-      <button class="nav-btn" id="btnPrev" title="Previous week">&#8249;</button>
+      <div class="nav-side">
+        <button class="nav-btn" id="btnPrev" title="Previous week">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="return-btn" id="returnBtnLeft" style="display:none" onclick="goToCurrent()">Return to current</button>
+      </div>
       <span class="week-label" id="weekLabel"></span>
-      <button class="nav-btn" id="btnNext" title="Next week">&#8250;</button>
+      <div class="nav-side">
+        <button class="return-btn" id="returnBtnRight" style="display:none" onclick="goToCurrent()">Return to current</button>
+        <button class="nav-btn" id="btnNext" title="Next week">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
     </div>
 
     <!-- Day headers -->
@@ -802,16 +840,17 @@ function weekRangeLabel(mon) {
   const diffMs = mon.getTime() - todayMonday.getTime();
   const diffWeeks = Math.round(diffMs / (7 * 24 * 60 * 60 * 1000));
 
-  if (diffWeeks === 0)  return 'Current week';
-  if (diffWeeks === 1)  return 'Next week';
-  if (diffWeeks === -1) return 'Last week';
+  if (diffWeeks === 0)  return 'Current';
+  if (diffWeeks === 1)  return 'Next';
+  if (diffWeeks === -1) return 'Last';
 
-  // For all other weeks, show the date range
-  const ds = weekDates(mon);
-  const a = ds[0], b = ds[4];
-  return (a.getMonth() === b.getMonth())
-    ? `${a.getDate()} – ${b.getDate()} de ${PT_MONTHS[a.getMonth()]}`
-    : `${fmt(a)} – ${fmt(b)}`;
+  // For all other weeks, use Q/R/W notation:
+  // Q = quarter (1–4), R = month within quarter (1–3), W = week within month (1–5)
+  const month          = mon.getMonth();                // 0–11
+  const quarter        = Math.floor(month / 3) + 1;    // 1–4
+  const monthInQuarter = (month % 3) + 1;              // 1–3 → R
+  const weekInMonth    = Math.ceil(mon.getDate() / 7); // 1–5 → W
+  return `[Q${quarter}] R${monthInQuarter}/W${weekInMonth}`;
 }
 
 function isToday(d) {
@@ -866,6 +905,16 @@ function render() {
 
 function renderWeekLabel() {
   document.getElementById('weekLabel').textContent = weekRangeLabel(monday);
+
+  // Show "Return to current" only when more than 1 week away from today
+  const diffWeeks = Math.round((monday - getMonday(new Date())) / (7 * 24 * 60 * 60 * 1000));
+  document.getElementById('returnBtnLeft').style.display  = diffWeeks >  1 ? 'inline-block' : 'none';
+  document.getElementById('returnBtnRight').style.display = diffWeeks < -1 ? 'inline-block' : 'none';
+}
+
+function goToCurrent() {
+  monday = getMonday(new Date());
+  render();
 }
 
 function renderDays() {

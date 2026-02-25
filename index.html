@@ -145,6 +145,13 @@
     }
     .nav-btn:active { background: rgba(255,255,255,0.22); transform: scale(.9); }
 
+    /* Tap echo — added by JS on touchend, fades the flash out after finger lifts */
+    @keyframes tapFlash {
+      from { background: rgba(255,255,255,0.22); }
+      to   { background: transparent; }
+    }
+    .nav-btn.was-tapped { animation: tapFlash 0.35s ease-out forwards; }
+
     /* ─── Day headers ─── */
     .days-row {
       display: grid;
@@ -1337,6 +1344,14 @@ document.getElementById('btnPrev').addEventListener('click', () => {
 document.getElementById('btnNext').addEventListener('click', () => {
   monday.setDate(monday.getDate() + 7);
   render();
+});
+
+// Tap echo for mobile: on touchend, play a brief fade-out flash on the button
+['btnPrev', 'btnNext'].forEach(id => {
+  document.getElementById(id).addEventListener('touchend', function() {
+    this.classList.add('was-tapped');
+    this.addEventListener('animationend', () => this.classList.remove('was-tapped'), { once: true });
+  }, { passive: true });
 });
 
 document.getElementById('btnAddTask').addEventListener('click', () => {

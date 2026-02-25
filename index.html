@@ -6,6 +6,14 @@
   <title>Weekly Planner</title>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@200;400;500;600&display=swap" rel="stylesheet" />
   <style>
+    /* ─── Design tokens ─── */
+    /* These are read by both CSS (via var()) and JavaScript (via getComputedStyle).
+       Override them in the mobile breakpoint to keep CSS and JS in sync. */
+    :root {
+      --cell-h:   48px;
+      --cell-gap:  8px;
+    }
+
     /* ─── Reset ─── */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -584,6 +592,68 @@
       50%  { transform: translate( -2%,   8%); }
       67%  { transform: translate(  5%,  -5%); }
       83%  { transform: translate( -7%,   3%); }
+    }
+
+    /* ─── Mobile (≤ 480px) ─── */
+    @media (max-width: 480px) {
+
+      /* Override the gap token so JS reads the correct value */
+      :root { --cell-gap: 4px; }
+
+      /* Less outer padding = more usable width (366px instead of 350px). */
+      body {
+        padding: 12px;
+      }
+
+      /* Smaller title — 40px is too dominant on a 390px screen */
+      .top-bar h1 { font-size: 24px; }
+
+      /* Remove the top margin that was compensating for the large desktop heading */
+      .add-top-btn { margin-top: 0; }
+
+      /* Smaller label fits between the two nav chevrons */
+      .week-label { font-size: 14px; }
+
+      /* Tighter day header columns — same 5-column grid, just more compact */
+      .days-row   { gap: var(--cell-gap); }
+      .day-header { padding: 4px 2px; }
+      .day-date   { font-size: 14px; }
+      .day-name   { font-size: 10px; }
+
+      /* Tighter task grid — reduces total wasted gap from 32px to 16px,
+         giving each of the 5 columns ~70px instead of ~62px */
+      .tasks-grid { gap: var(--cell-gap); }
+
+      /* Smaller task text and tighter padding to fit in narrow columns */
+      .task-block { padding: 6px 4px; }
+      .task-name  { font-size: 12px; }
+
+      /* Larger touch hit zones on resize handles (was 10px, now 14px) */
+      .resize-l, .resize-r { width:  14px; }
+      .resize-b            { height: 14px; }
+
+      /* Bigger delete button — easier to tap with a finger */
+      .del-btn { width: 22px; height: 22px; }
+
+      /* Modal: fill the overlay's width (overlay already has 16px padding on each side)
+         and reduce interior padding to reclaim space for form fields */
+      .modal {
+        max-width: 100%;
+        padding: 16px;
+      }
+
+      /* Stack the two-column form fields vertically.
+         "Start day / End day" and "Row / Height" become 4 full-width rows. */
+      .two-col { grid-template-columns: 1fr; }
+
+      /* Slightly larger color swatches for easier tapping */
+      .swatch { width: 38px; height: 38px; }
+
+      /* Taller action buttons — easier to tap */
+      .btn { padding: 13px; }
+
+      /* Remove the blur behind the modal — it's expensive on mobile GPUs */
+      .overlay { backdrop-filter: none; -webkit-backdrop-filter: none; }
     }
 
     /* ─── Print ─── */
@@ -1208,9 +1278,13 @@ document.getElementById('iStart').addEventListener('change', () => {
 // DRAG & RESIZE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-// These must match the CSS values (grid row height and gap)
+// CELL_H stays fixed (grid-template-rows always uses 48px).
+// CELL_GAP is a function so it re-reads the CSS custom property each time —
+// this means desktop (8px gap) and mobile (4px gap) are always in sync.
 const CELL_H   = 48;
-const CELL_GAP =  8;
+const CELL_GAP = () => parseFloat(
+  getComputedStyle(document.documentElement).getPropertyValue('--cell-gap')
+) || 8;
 
 let drag    = null; // state while a task is being moved
 let resize  = null; // state while a task edge is being dragged
@@ -1224,22 +1298,24 @@ function gridRect() {
 // Converts a screen X coordinate → grid column index (0–4)
 function colFromClientX(x) {
   const r    = gridRect();
-  const colW = (r.width - CELL_GAP * 4) / 5; // width of one column in pixels
+  const gap  = CELL_GAP(); // read live from CSS — adapts to mobile (4px) vs desktop (8px)
+  const colW = (r.width - gap * 4) / 5; // width of one column in pixels
   const relX = x - r.left;
-  return Math.max(0, Math.min(4, Math.floor(relX / (colW + CELL_GAP))));
+  return Math.max(0, Math.min(4, Math.floor(relX / (colW + gap))));
 }
 
 // Converts a screen Y coordinate → grid row index (0+)
 function rowFromClientY(y) {
   const r    = gridRect();
   const relY = y - r.top;
-  return Math.max(0, Math.min(20, Math.floor(relY / (CELL_H + CELL_GAP))));
+  return Math.max(0, Math.min(20, Math.floor(relY / (CELL_H + CELL_GAP()))));
 }
 
 // ─── Start drag (move) ───────────────────────────────────
 
 function startDrag(e, taskId) {
   if (e.button !== 0) return; // left click only
+  if (window.matchMedia('(pointer: coarse)').matches) return; // touch device → open modal instead
   e.preventDefault();
 
   const task = tasks.find(t => t.id === taskId);
@@ -1272,6 +1348,7 @@ function startDrag(e, taskId) {
 
 function startResize(e, taskId, dir) {
   if (e.button !== 0) return;
+  if (window.matchMedia('(pointer: coarse)').matches) return; // touch device → no resize
   e.stopPropagation(); // prevent startDrag from also firing on the parent task block
   e.preventDefault();
 
